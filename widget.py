@@ -12,53 +12,57 @@ class MusiqueDisplay(QVBoxLayout, Observer):
 
         upper_layout = QHBoxLayout()
         lower_layout = QHBoxLayout()
-
-        self.previous = None
-        self.next = None
-        self.play = None
+        self.btns = {}
 
         # Creating the upper layout
-        self.btn_shuffle = QPushButton("Shuffle")
+        btn_shuffle = QPushButton("Shuffle")
+        btn_shuffle.clicked.connect(self.shuffle_clicked)
+        self.btns["shuffle"] = btn_shuffle
 
         self.song_title = QLabel("Song Title")
         self.song_title.alignment = Qt.AlignmentFlag.AlignCenter
 
-        self.btn_repeat = QPushButton("Repeat")
+        btn_repeat = QPushButton("Repeat")
+        btn_repeat.clicked.connect(self.repeat_clicked)
+        self.btns["repeat"] = btn_repeat
 
-        upper_layout.addWidget(self.btn_shuffle)
+        upper_layout.addWidget(btn_shuffle)
         upper_layout.addWidget(self.song_title)
-        upper_layout.addWidget(self.btn_repeat)
+        upper_layout.addWidget(btn_repeat)
 
         # Creating the lower layout
-        self.btn_left = QPushButton("Previous")
-        self.btn_play = QPushButton("Play")
-        self.btn_right = QPushButton("Next")
+        btn_left = QPushButton("Previous")
+        self.btns["previous"] = btn_left
 
-        lower_layout.addWidget(self.btn_left)
-        lower_layout.addWidget(self.btn_play)
-        lower_layout.addWidget(self.btn_right)
+        btn_play = QPushButton("Play")
+        self.btns["play"] = btn_play
+
+        btn_right = QPushButton("Next")
+        self.btns["next"] = btn_right
+
+        lower_layout.addWidget(btn_left)
+        lower_layout.addWidget(btn_play)
+        lower_layout.addWidget(btn_right)
 
         self.addLayout(upper_layout)
         self.addLayout(lower_layout)
 
+
     def update(self, info=None):
-        self.btn_play.setText(info.get("State", "Play"))
+        self.btns.get("play").setText(info.get("State", "Play"))
         self.song_title.setText(info.get("Title", "Song Title"))
 
-    def set_shuffle(self, func):
-        self.btn_shuffle.clicked.connect(func)
+    def set_btn_methods(self, funcs: dict):
+        for key, func in funcs.items():
+            self.btns.get(key).clicked.connect(func)
 
-    def set_repeat(self, func):
-        self.btn_repeat.clicked.connect(func)
+    def repeat_clicked(self):
+        btn = self.btns.get("repeat")
+        btn.setText("Repeat" if btn.text() != "Repeat" else "Repeat: on")
 
-    def set_previous_function(self, func):
-        self.btn_left.clicked.connect(func)
-
-    def set_next_function(self, func):
-        self.btn_right.clicked.connect(func)
-
-    def set_play_function(self, func):
-        self.btn_play.clicked.connect(func)
+    def shuffle_clicked(self):
+        btn = self.btns.get("shuffle")
+        btn.setText("Shuffle" if btn.text() != "Shuffle" else "Unshuffle")
 
 
 class SongDisplay(QVBoxLayout, Observer):

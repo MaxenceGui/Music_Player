@@ -1,8 +1,9 @@
 import os
+import random
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QFileDialog
 from widget import MusiqueDisplay, SongDisplay
-from PyQt6.QtCore import QUrl
+from PyQt6.QtCore import QUrl, QSettings
 
 class Subject:
 
@@ -24,8 +25,11 @@ class MediaPlayer(QWidget, Subject):
         super().__init__()
         self.song_files = []
         self.song_index = -1
+        self.song_prev_index = -1
         self.actual_song_name = ""
         self.loop = False
+        self.random = False
+        self.repeat_song = False
         self.player = QMediaPlayer()
         self.audio_output = QAudioOutput()
         self.player.setAudioOutput(self.audio_output)
@@ -47,22 +51,22 @@ class MediaPlayer(QWidget, Subject):
 
     def play_previous(self):
         if self.song_files:
-            self.song_index = (self.song_index - 1) % len(self.song_files)
+            self.song_index = (self.song_index - 1) % len(self.song_files) if not self.random else self.song_prev_index
             self.play_song(self.song_files[self.song_index])
 
     def play_next(self):
         if self.song_files:
-            self.song_index = (self.song_index + 1) % len(self.song_files)
+            increment = 1 if not self.random else random.randint(0, len(self.song_files) - 1)
+            self.song_prev_index = self.song_index
+            if not self.repeat_song:
+                self.song_index = (self.song_index + increment) % len(self.song_files)
             self.play_song(self.song_files[self.song_index])
 
     def shuffle(self):
-        pass
+        self.random = not self.random
 
     def repeat(self):
-        if self.loop:
-            self.loop = False
-        else:
-            self.loop = True
+        self.loop = not self.loop
 
     def handle_media_status(self, status):
         if status == QMediaPlayer.MediaStatus.EndOfMedia and self.loop:
@@ -91,19 +95,29 @@ class MusiquePlayer(QWidget, Subject):
         # Set button connection
         file_layout.connect_select_folder_method(self.select_folder)
         file_layout.set_play_selected_method(self.play_selected_song)
-        music_layout.set_previous_function(self.player.play_previous)
-        music_layout.set_next_function(self.player.play_next)
-        music_layout.set_play_function(self.player.toggle_play)
-        music_layout.set_shuffle(self.player.shuffle)
-        music_layout.set_repeat(self.player.repeat)
+        music_layout.set_btn_methods({
+            "repeat": self.player.repeat,
+            "shuffle": self.player.shuffle,
+            "previous": self.player.play_previous,
+            "play": self.player.toggle_play,
+            "next": self.player.play_next
+        })
 
         self.setLayout(main_layout)
 
         self.resize(400, 200)
 
+        folder = self.load_folder_path()
+        if folder:
+            self.load_songs(folder)
+
     def select_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Select Music Folder")
         if folder:
+            self.save_folder_path(folder)
+            self.load_songs(folder)
+
+    def load_songs(self, folder):
             self.player.song_files = [os.path.join(folder, f) for f in os.listdir(folder) if f.endswith(('.mp3', '.wav', '.ogg'))]
             self.song_list.clear()
             for file in self.player.song_files:
@@ -115,3 +129,11 @@ class MusiquePlayer(QWidget, Subject):
         if 0 <= index < len(self.player.song_files):
             self.player.song_index = index
             self.player.play_song(self.player.song_files[index])
+
+    def save_folder_path(self, folder_path):
+        setting = QSettings("MediaPlayer", "MusicPlayer")
+        setting.setValue("folder_path", folder_path)
+
+    def load_folder_path(self):
+        setting = QSettings("MediaPlayer", "MusicPlayer")
+        return setting.value("folder_path", "")
