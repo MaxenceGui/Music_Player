@@ -25,9 +25,11 @@ class MediaPlayer(QWidget, Subject):
         self.song_files = []
         self.song_index = -1
         self.actual_song_name = ""
+        self.loop = False
         self.player = QMediaPlayer()
         self.audio_output = QAudioOutput()
         self.player.setAudioOutput(self.audio_output)
+        self.player.mediaStatusChanged.connect(self.handle_media_status)
 
     def toggle_play(self):
         if self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
@@ -57,7 +59,14 @@ class MediaPlayer(QWidget, Subject):
         pass
 
     def repeat(self):
-        pass
+        if self.loop:
+            self.loop = False
+        else:
+            self.loop = True
+
+    def handle_media_status(self, status):
+        if status == QMediaPlayer.MediaStatus.EndOfMedia and self.loop:
+            self.play_next()
 
 class MusiquePlayer(QWidget, Subject):
     def __init__(self):
@@ -90,7 +99,7 @@ class MusiquePlayer(QWidget, Subject):
 
         self.setLayout(main_layout)
 
-        self.resize(400, 400)
+        self.resize(400, 200)
 
     def select_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Select Music Folder")

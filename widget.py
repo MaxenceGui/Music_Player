@@ -45,11 +45,11 @@ class MusiqueDisplay(QVBoxLayout, Observer):
         self.btn_play.setText(info.get("State", "Play"))
         self.song_title.setText(info.get("Title", "Song Title"))
 
-    def set_shuffle(self):
-        self.btn_shuffle.clicked.connect(self.shuffle)
+    def set_shuffle(self, func):
+        self.btn_shuffle.clicked.connect(func)
 
-    def set_repeat(self):
-        self.btn_repeat.clicked.connect(self.repeat)
+    def set_repeat(self, func):
+        self.btn_repeat.clicked.connect(func)
 
     def set_previous_function(self, func):
         self.btn_left.clicked.connect(func)
