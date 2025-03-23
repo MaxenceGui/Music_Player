@@ -34,7 +34,7 @@ class MusiqueDisplay(QVBoxLayout, Observer):
         self.song_title = QLabel("Song Title")
         self.song_title.alignment = Qt.AlignmentFlag.AlignCenter
 
-        btn_repeat = QPushButton("Repeat")
+        btn_repeat = QPushButton("Loop")
         btn_repeat.clicked.connect(self.repeat_clicked)
         self.btns["repeat"] = btn_repeat
 
@@ -70,7 +70,7 @@ class MusiqueDisplay(QVBoxLayout, Observer):
 
     def repeat_clicked(self):
         btn = self.btns.get("repeat")
-        btn.setText("Repeat" if btn.text() != "Repeat" else "Repeat: on")
+        btn.setText("Loop" if btn.text() != "Loop" else "Loop: on")
 
     def shuffle_clicked(self):
         btn = self.btns.get("shuffle")
@@ -176,7 +176,7 @@ class MediaPlayer(QWidget, Subject):
         self.random = not self.random
 
     def repeat(self):
-        self.repeat_song = True if self.random else False
+        self.repeat_song = True if self.loop else False
         self.loop = not self.loop
 
     def handle_media_status(self, status):
